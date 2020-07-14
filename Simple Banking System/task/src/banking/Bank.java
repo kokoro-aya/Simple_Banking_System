@@ -6,7 +6,7 @@ import java.sql.*;
 import java.util.*;
 
 enum State {
-    MENU1, CREATE, LOGIN, MENU2, BALANCE, LOGOUT, EXIT
+    MENU1, CREATE, LOGIN, MENU2, BALANCE, LOGOUT, INCOME, TRANSFER, CLOSE_ACCOUNT, EXIT
 }
 
 public class Bank {
@@ -94,7 +94,10 @@ public class Bank {
             }
             case MENU2: {
                 System.out.println("1. Balance");
-                System.out.println("2. Log out");
+                System.out.println("2. Add income");
+                System.out.println("3. Do transfer");
+                System.out.println("4. Close account");
+                System.out.println("5. Log out");
                 System.out.println("0. Exit");
                 int ans = Integer.parseInt(sc.nextLine());
                 switch (ans) {
@@ -103,6 +106,18 @@ public class Bank {
                         break;
                     }
                     case 2: {
+                        state = State.INCOME;
+                        break;
+                    }
+                    case 3: {
+                        state = State.TRANSFER;
+                        break;
+                    }
+                    case 4: {
+                        state = State.CLOSE_ACCOUNT;
+                        break;
+                    }
+                    case 5: {
                         state = State.LOGOUT;
                         break;
                     }
@@ -118,6 +133,53 @@ public class Bank {
             case BALANCE: {
                 System.out.println(db.getBalance(activeUser));
                 state = State.MENU2;
+                break;
+            }
+            case INCOME: {
+                System.out.println("Enter income:");
+                db.addIncome(activeUser, Integer.parseInt(sc.nextLine()) + db.getBalance(activeUser));
+                System.out.println("Income was added!");
+                state = State.MENU2;
+                break;
+            }
+            case TRANSFER: {
+                System.out.println("Enter card number:");
+                String dest = sc.nextLine();
+                if (dest.equals(activeUser)) {
+                    System.out.println("You can't transfer money to the same account!");
+                } else {
+                    int[] step = new int[dest.length()];
+                    for (int i = 0; i < step.length; i++)
+                        step[i] = Integer.parseInt(dest.substring(i, i + 1));
+                    for (int i = 0; i < step.length; i += 2) {
+                        step[i] *= 2;
+                        if (step[i] > 9)
+                            step[i] -= 9;
+                    }
+                    int added = Arrays.stream(step).reduce(0, Integer::sum);
+                    if (added % 10 != 0) {
+                        System.out.println("Probably you made mistake in the card number. Please try again!");
+                    } else if (!db.contains(dest)) {
+                        System.out.println("Such a card does not exist.");
+                    } else {
+                        System.out.println("Enter how much money you want to transfer:");
+                        int amount = Integer.parseInt(sc.nextLine());
+                        if (amount > db.getBalance(activeUser)) {
+                            System.out.println("Not enough money!");
+                        } else {
+                            db.addIncome(activeUser, -amount);
+                            db.addIncome(dest, amount);
+                            System.out.println("Success!");
+                        }
+                    }
+                }
+                state = State.MENU2;
+                break;
+            }
+            case CLOSE_ACCOUNT: {
+                db.closeAccount(activeUser);
+                System.out.println("The account has been closed!");
+                state = State.MENU1;
                 break;
             }
             case LOGOUT: {

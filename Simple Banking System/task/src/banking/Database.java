@@ -116,4 +116,29 @@ public class Database {
             }
         }
     }
+
+    public void addIncome(String num, int amount) {
+        String sql = "update card set balance = ? where number = ?";
+        try {
+            Connection conn = this.conn;
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, amount);
+            pstmt.setString(2, num);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void closeAccount(String num) {
+        String sql = "delete from card where number = ?";
+        try {
+            Connection conn = this.conn;
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, num);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 }

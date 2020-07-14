@@ -1,6 +1,8 @@
 package banking;
 
+import javax.xml.crypto.Data;
 import java.math.BigInteger;
+import java.sql.*;
 import java.util.*;
 
 enum State {
@@ -11,15 +13,13 @@ public class Bank {
     Scanner sc = new Scanner(System.in);
     Random r = new Random();
     State state;
-
-    private final Map<String, String>  users;
-    private final Map<String, Integer> balances;
+    Database db;
     private String activeUser;
 
-    public Bank() {
+    public Bank(String url) {
+
         state = State.MENU1;
-        users = new TreeMap<>();
-        balances = new TreeMap<>();
+        db = Database.getInstance(url);
         activeUser = "";
     }
 
@@ -41,6 +41,7 @@ public class Bank {
                     }
                     case 0: {
                         System.out.println("Bye!");
+                        db.close();
                         state = State.EXIT;
                         break;
                     }
@@ -63,12 +64,11 @@ public class Bank {
                     }
                     int added = Arrays.stream(step).reduce(0, Integer::sum);
                     card += 10 - (added % 10);
-                } while (users.containsKey(card));
+                } while (db.contains(card));
                 String pin = "";
                 for (int i = 0; i < 4; i++)
                     pin += r.nextInt(10);
-                users.put(card, pin);
-                balances.put(card, 0);
+                db.insert(card, pin, 0);
                 System.out.println("Your card has been created");
                 System.out.println("Your card number:");
                 System.out.println(card);
@@ -82,7 +82,7 @@ public class Bank {
                 String card = sc.nextLine();
                 System.out.println("Enter your PIN:");
                 String pin = sc.nextLine();
-                if (users.get(card) != null && users.get(card).equals(pin)) {
+                if (db.contains(card) && db.getPin(card).equals(pin)) {
                     activeUser = card;
                     System.out.println("You have successfully logged in!");
                     state = State.MENU2;
@@ -108,6 +108,7 @@ public class Bank {
                     }
                     case 0: {
                         System.out.println("Bye!");
+                        db.close();
                         state = State.EXIT;
                         break;
                     }
@@ -115,7 +116,7 @@ public class Bank {
                 break;
             }
             case BALANCE: {
-                System.out.println(balances.get(activeUser));
+                System.out.println(db.getBalance(activeUser));
                 state = State.MENU2;
                 break;
             }

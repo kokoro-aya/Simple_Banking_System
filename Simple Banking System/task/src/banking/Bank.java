@@ -1,10 +1,7 @@
 package banking;
 
 import java.math.BigInteger;
-import java.util.Map;
-import java.util.Random;
-import java.util.Scanner;
-import java.util.TreeMap;
+import java.util.*;
 
 enum State {
     MENU1, CREATE, LOGIN, MENU2, BALANCE, LOGOUT, EXIT
@@ -56,7 +53,16 @@ public class Bank {
                     card = "400000";
                     for (int i = 0; i < 9; i++)
                         card += r.nextInt(10);
-                    card += "5";
+                    int[] step = new int[card.length()];
+                    for (int i = 0; i < step.length; i++)
+                        step[i] = Integer.parseInt(card.substring(i, i + 1));
+                    for (int i = 0; i < step.length; i += 2) {
+                        step[i] *= 2;
+                        if (step[i] > 9)
+                            step[i] -= 9;
+                    }
+                    int added = Arrays.stream(step).reduce(0, Integer::sum);
+                    card += 10 - (added % 10);
                 } while (users.containsKey(card));
                 String pin = "";
                 for (int i = 0; i < 4; i++)
